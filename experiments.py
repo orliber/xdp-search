@@ -27,7 +27,7 @@ def run_all(
     grid_height: int = 30,
     grid_instances: int = 50,
     puzzle_instances: int = 50,
-    puzzle_scramble_moves: int = 40,
+    puzzle_scramble_moves: int = 20,
 ) -> List[Dict[str, object]]:
     """Run all requested algorithm, weight, and domain combinations."""
 
@@ -62,6 +62,7 @@ def run_domain(domain: str, variant: str, problems: Iterable[Union[FifteenPuzzle
     problem_list = list(problems)
     for algorithm in ALGORITHMS:
         for weight in WEIGHTS:
+            print(f"Running {domain} ({variant}) {algorithm} w={weight}", flush=True)
             for instance_id, problem in enumerate(problem_list):
                 result = best_first_search(
                     problem=problem,
@@ -156,7 +157,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--grid-height", type=int, default=30)
     parser.add_argument("--grid-instances", type=int, default=50)
     parser.add_argument("--puzzle-instances", type=int, default=50)
-    parser.add_argument("--puzzle-scramble-moves", type=int, default=40)
+    parser.add_argument("--puzzle-scramble-moves", type=int, default=20)
     return parser.parse_args()
 
 

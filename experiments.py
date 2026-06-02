@@ -26,8 +26,8 @@ def run_all(
     grid_width: int = 30,
     grid_height: int = 30,
     grid_instances: int = 50,
-    puzzle_instances: int = 50,
-    puzzle_scramble_moves: int = 20,
+    puzzle_instances: int = 10,
+    puzzle_scramble_moves: int = 15,
 ) -> List[Dict[str, object]]:
     """Run all requested algorithm, weight, and domain combinations."""
 
@@ -156,8 +156,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--grid-width", type=int, default=30)
     parser.add_argument("--grid-height", type=int, default=30)
     parser.add_argument("--grid-instances", type=int, default=50)
-    parser.add_argument("--puzzle-instances", type=int, default=50)
-    parser.add_argument("--puzzle-scramble-moves", type=int, default=20)
+    parser.add_argument("--puzzle-instances", type=int, default=10)
+    parser.add_argument("--puzzle-scramble-moves", type=int, default=15)
     return parser.parse_args()
 
 

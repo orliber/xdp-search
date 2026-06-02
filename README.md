@@ -1,0 +1,37 @@
+# xdp-search
+
+Python experiments comparing Weighted A*, XDP, and XUP best-first search.
+
+## Profile
+
+Yair Lavy  
+yairlavy · he/him
+
+## Files
+
+- `algorithms.py` - shared best-first search core and priority functions.
+- `domains.py` - 15-puzzle and random obstacle grid domains.
+- `experiments.py` - benchmark runner, CSV output, and printed tables.
+- `visualize.py` - matplotlib plots of average expansions by weight.
+
+## Run
+
+```bash
+python3 experiments.py
+```
+
+This writes:
+
+- `results/results_raw.csv`
+- `results/results_summary.csv`
+
+To generate plots:
+
+```bash
+pip install -r requirements.txt
+python3 visualize.py
+```
+
+Default experiments use random seed `20260602`, weights `1.5, 2.0, 3.0, 10.0`,
+and grid obstacle densities `10%, 20%, 30%, 40%` with 50 random instances per
+density.

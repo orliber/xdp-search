@@ -49,7 +49,8 @@ def plot_summary(summary_csv: Path, output_dir: Path) -> List[Path]:
         ax.legend()
         fig.tight_layout()
 
-        filename = f"{domain}_{variant}_expansions.png".replace(" ", "_").replace(".", "_")
+        stem = f"{domain}_{variant}_expansions".replace(" ", "_").replace(".", "_")
+        filename = f"{stem}.png"
         path = output_dir / filename
         fig.savefig(path, dpi=160)
         plt.close(fig)

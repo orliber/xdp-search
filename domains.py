@@ -93,21 +93,36 @@ def random_grid(
     rng: random.Random,
     require_solvable: bool = True,
 ) -> Grid:
-    """Generate a random grid, optionally retrying until start can reach goal."""
+    """Generate a random grid, keeping one random path open when requested."""
 
-    while True:
-        obstacles = set()
-        for row in range(height):
-            for col in range(width):
-                point = (row, col)
-                if point in ((0, 0), (height - 1, width - 1)):
-                    continue
-                if rng.random() < density:
-                    obstacles.add(point)
+    protected = {(0, 0), (height - 1, width - 1)}
+    if require_solvable:
+        protected.update(random_monotone_path(width, height, rng))
 
-        grid = Grid(width=width, height=height, obstacles=frozenset(obstacles))
-        if not require_solvable or grid_is_solvable(grid):
-            return grid
+    obstacles = set()
+    for row in range(height):
+        for col in range(width):
+            point = (row, col)
+            if point in protected:
+                continue
+            if rng.random() < density:
+                obstacles.add(point)
+
+    return Grid(width=width, height=height, obstacles=frozenset(obstacles))
+
+
+def random_monotone_path(width: int, height: int, rng: random.Random) -> List[GridPoint]:
+    """Create a shuffled down/right path from top-left to bottom-right."""
+
+    moves = [(1, 0)] * (height - 1) + [(0, 1)] * (width - 1)
+    rng.shuffle(moves)
+    row, col = 0, 0
+    path = [(row, col)]
+    for dr, dc in moves:
+        row += dr
+        col += dc
+        path.append((row, col))
+    return path
 
 
 def grid_is_solvable(grid: Grid) -> bool:

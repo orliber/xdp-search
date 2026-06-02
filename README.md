@@ -4,11 +4,10 @@ Python experiments comparing Weighted A*, XDP, and XUP best-first search.
 
 Repository: https://github.com/orliber/xdp-search
 
-## Collaborator
+## Contributors
 
-Yair Lavy  
-GitHub: [yairlavy](https://github.com/yairlavy)  
-Pronouns: he/him
+- Or Liberman - [orliber](https://github.com/orliber)
+- Yair Lavy - [yairlavy](https://github.com/yairlavy)
 
 ## Files
 

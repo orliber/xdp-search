@@ -40,8 +40,8 @@ def run_all(
     grid_width: int = 50,
     grid_height: int = 50,
     grid_instances: int = 50,
-    puzzle_instances: int = 20,
-    puzzle_scramble_moves: int = 200,
+    puzzle_instances: int = 10,
+    puzzle_scramble_moves: int = 80,
 ) -> List[Dict[str, object]]:
     """Run all requested algorithm, weight, and domain combinations."""
 
@@ -121,7 +121,7 @@ def run_reopen_comparison(
     grid_height: int = 50,
     grid_instances: int = 20,
     puzzle_instances: int = 10,
-    puzzle_scramble_moves: int = 200,
+    puzzle_scramble_moves: int = 80,
 ) -> List[Dict[str, object]]:
     """Compare with-reopen vs no-reopen to validate Theorem 9 of Chen & Sturtevant (IJCAI 2019).
 
@@ -311,8 +311,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--grid-width", type=int, default=50)
     parser.add_argument("--grid-height", type=int, default=50)
     parser.add_argument("--grid-instances", type=int, default=50)
-    parser.add_argument("--puzzle-instances", type=int, default=20)
-    parser.add_argument("--puzzle-scramble-moves", type=int, default=200)
+    parser.add_argument("--puzzle-instances", type=int, default=10)
+    parser.add_argument("--puzzle-scramble-moves", type=int, default=80)
     parser.add_argument(
         "--reopen-comparison",
         action="store_true",

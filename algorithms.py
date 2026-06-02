@@ -45,15 +45,15 @@ def weighted_astar_priority(g: float, h: float, w: float) -> float:
 
 
 def xdp_priority(g: float, h: float, w: float) -> float:
-    """XDP priority function."""
+    """XDP: Φ(h,g) = [g + (2w-1)h + sqrt((g-h)² + 4wgh)] / 2w  (eq. 9, Chen & Sturtevant IJCAI 2019)."""
 
-    return (h + (2 * w - 1) * g + math.sqrt((h - g) ** 2 + 4 * w * h * g)) / (2 * w)
+    return (g + (2 * w - 1) * h + math.sqrt((h - g) ** 2 + 4 * w * g * h)) / (2 * w)
 
 
 def xup_priority(g: float, h: float, w: float) -> float:
-    """XUP priority function."""
+    """XUP: Φ(h,g) = [g + h + sqrt((g+h)² + 4w(w-1)h²)] / 2w  (eq. 11, Chen & Sturtevant IJCAI 2019)."""
 
-    return (h + g + math.sqrt((h + g) ** 2 + 4 * w * (w - 1) * g**2)) / (2 * w)
+    return (g + h + math.sqrt((g + h) ** 2 + 4 * w * (w - 1) * h**2)) / (2 * w)
 
 
 PRIORITIES: Dict[str, Callable[[float, float, float], float]] = {
@@ -68,8 +68,9 @@ def best_first_search(
     weight: float,
     priority_fn: Callable[[float, float, float], float],
     algorithm: str,
+    max_expansions: int = 10_000_000,
 ) -> SearchResult[State]:
-    """Run graph-search best-first search using the supplied priority function."""
+    """Algorithm 1 of Chen & Sturtevant (IJCAI 2019): best-first search without node re-expansions."""
 
     started = time.perf_counter()
     counter = 0
@@ -101,12 +102,14 @@ def best_first_search(
 
         closed.add(state)
         expansions += 1
+        if expansions >= max_expansions:
+            break
         current_g = g_score[state]
 
         for neighbor, step_cost in problem.neighbors(state):
-            tentative_g = current_g + step_cost
-            if neighbor in closed and tentative_g >= g_score.get(neighbor, math.inf):
+            if neighbor in closed:  # never reopen — Theorem 9 guarantees w-suboptimality without it
                 continue
+            tentative_g = current_g + step_cost
             if tentative_g < g_score.get(neighbor, math.inf):
                 g_score[neighbor] = tentative_g
                 parent[neighbor] = state

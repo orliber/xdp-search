@@ -8,26 +8,36 @@ import random
 from collections import defaultdict
 from pathlib import Path
 from statistics import mean
-from typing import Dict, Iterable, List, Union
+from typing import Dict, Iterable, List, Sequence, Union
 
 from algorithms import PRIORITIES, best_first_search
 from domains import FifteenPuzzle, Grid, make_grid_instances, random_puzzle
 
 
 ALGORITHMS = ("weighted_astar", "xdp", "xup")
-WEIGHTS = (1.5, 2.0, 3.0, 10.0)
+
+# Table 4 of Chen & Sturtevant (IJCAI 2019): puzzle experiments use w >= 1.5
+# (XUP expands an impractical number of nodes on puzzles for smaller weights)
+PUZZLE_WEIGHTS: Sequence[float] = (1.5, 2.0, 3.0, 10.0)
+
+# Table 3 of Chen & Sturtevant (IJCAI 2019): grid experiments include w = 1.25
+GRID_WEIGHTS: Sequence[float] = (1.25, 1.5, 2.0, 3.0, 10.0)
+
 DENSITIES = (0.10, 0.20, 0.30, 0.40)
-SEED = 20260602
+SEED = 42
+
+# Safety cap: prevent runaway searches on unexpectedly hard instances
+MAX_EXPANSIONS = 2_000_000
 
 
 def run_all(
     output_dir: Path,
     seed: int = SEED,
-    grid_width: int = 30,
-    grid_height: int = 30,
+    grid_width: int = 50,
+    grid_height: int = 50,
     grid_instances: int = 50,
-    puzzle_instances: int = 10,
-    puzzle_scramble_moves: int = 15,
+    puzzle_instances: int = 20,
+    puzzle_scramble_moves: int = 200,
 ) -> List[Dict[str, object]]:
     """Run all requested algorithm, weight, and domain combinations."""
 
@@ -36,7 +46,7 @@ def run_all(
 
     puzzle_rng = random.Random(seed)
     puzzles = [random_puzzle(puzzle_scramble_moves, puzzle_rng) for _ in range(puzzle_instances)]
-    rows.extend(run_domain("15-puzzle", "all", puzzles))
+    rows.extend(run_domain("15-puzzle", "all", puzzles, PUZZLE_WEIGHTS))
 
     grids_by_density = make_grid_instances(
         width=grid_width,
@@ -46,7 +56,7 @@ def run_all(
         seed=seed + 1,
     )
     for density, grids in grids_by_density.items():
-        rows.extend(run_domain("grid", f"{density:.2f}", grids))
+        rows.extend(run_domain("grid", f"{density:.2f}", grids, GRID_WEIGHTS))
 
     summary_rows = summarize(rows)
     write_csv(output_dir / "results_raw.csv", rows)
@@ -55,13 +65,18 @@ def run_all(
     return summary_rows
 
 
-def run_domain(domain: str, variant: str, problems: Iterable[Union[FifteenPuzzle, Grid]]) -> List[Dict[str, object]]:
+def run_domain(
+    domain: str,
+    variant: str,
+    problems: Iterable[Union[FifteenPuzzle, Grid]],
+    weights: Sequence[float],
+) -> List[Dict[str, object]]:
     """Run every algorithm and weight on a sequence of problem instances."""
 
     rows: List[Dict[str, object]] = []
     problem_list = list(problems)
     for algorithm in ALGORITHMS:
-        for weight in WEIGHTS:
+        for weight in weights:
             print(f"Running {domain} ({variant}) {algorithm} w={weight}", flush=True)
             for instance_id, problem in enumerate(problem_list):
                 result = best_first_search(
@@ -69,6 +84,7 @@ def run_domain(domain: str, variant: str, problems: Iterable[Union[FifteenPuzzle
                     weight=weight,
                     priority_fn=PRIORITIES[algorithm],
                     algorithm=algorithm,
+                    max_expansions=MAX_EXPANSIONS,
                 )
                 rows.append(
                     {
@@ -153,11 +169,11 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", type=Path, default=Path("results"))
     parser.add_argument("--seed", type=int, default=SEED)
-    parser.add_argument("--grid-width", type=int, default=30)
-    parser.add_argument("--grid-height", type=int, default=30)
+    parser.add_argument("--grid-width", type=int, default=50)
+    parser.add_argument("--grid-height", type=int, default=50)
     parser.add_argument("--grid-instances", type=int, default=50)
-    parser.add_argument("--puzzle-instances", type=int, default=10)
-    parser.add_argument("--puzzle-scramble-moves", type=int, default=15)
+    parser.add_argument("--puzzle-instances", type=int, default=20)
+    parser.add_argument("--puzzle-scramble-moves", type=int, default=200)
     return parser.parse_args()
 
 

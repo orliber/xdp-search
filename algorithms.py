@@ -31,9 +31,11 @@ class SearchResult(Generic[State]):
 
     algorithm: str
     weight: float
+    allow_reopen: bool
     found: bool
     cost: Optional[float]
     expansions: int
+    reopens: int      # how many closed nodes were reopened (always 0 when allow_reopen=False)
     runtime: float
     path: List[State]
 
@@ -69,12 +71,22 @@ def best_first_search(
     priority_fn: Callable[[float, float, float], float],
     algorithm: str,
     max_expansions: int = 10_000_000,
+    allow_reopen: bool = False,
 ) -> SearchResult[State]:
-    """Algorithm 1 of Chen & Sturtevant (IJCAI 2019): best-first search without node re-expansions."""
+    """Generic best-first search.
+
+    When allow_reopen=False (default) implements Algorithm 1 of Chen & Sturtevant
+    (IJCAI 2019): closed nodes are never revisited. XDP and XUP are proven
+    (Theorem 9) to remain w-suboptimal under this policy.
+
+    When allow_reopen=True, a closed node is removed from the closed set and
+    re-queued whenever a shorter path to it is discovered.
+    """
 
     started = time.perf_counter()
     counter = 0
     expansions = 0
+    reopens = 0
     start = problem.start
     g_score: Dict[State, float] = {start: 0.0}
     parent: Dict[State, Optional[State]] = {start: None}
@@ -93,9 +105,11 @@ def best_first_search(
             return SearchResult(
                 algorithm=algorithm,
                 weight=weight,
+                allow_reopen=allow_reopen,
                 found=True,
                 cost=g_score[state],
                 expansions=expansions,
+                reopens=reopens,
                 runtime=runtime,
                 path=_reconstruct_path(parent, state),
             )
@@ -107,10 +121,14 @@ def best_first_search(
         current_g = g_score[state]
 
         for neighbor, step_cost in problem.neighbors(state):
-            if neighbor in closed:  # never reopen — Theorem 9 guarantees w-suboptimality without it
+            is_closed = neighbor in closed
+            if is_closed and not allow_reopen:
                 continue
             tentative_g = current_g + step_cost
             if tentative_g < g_score.get(neighbor, math.inf):
+                if is_closed:  # allow_reopen is True here
+                    closed.discard(neighbor)
+                    reopens += 1
                 g_score[neighbor] = tentative_g
                 parent[neighbor] = state
                 counter += 1
@@ -122,9 +140,11 @@ def best_first_search(
     return SearchResult(
         algorithm=algorithm,
         weight=weight,
+        allow_reopen=allow_reopen,
         found=False,
         cost=None,
         expansions=expansions,
+        reopens=reopens,
         runtime=runtime,
         path=[],
     )

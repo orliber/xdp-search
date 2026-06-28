@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 results/
 plots/
+
+.early.coverage
